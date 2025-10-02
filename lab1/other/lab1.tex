@@ -124,8 +124,7 @@
   % Стрелки с уровня 1
   \path (a) edge node[left] {a} (aa)
         (a) edge node[above] {b} (ab)
-        (b) edge node[above] {a} (ab)
-        (b) edge node[right] {b} (ba);
+        (b) edge node[right] {a, b} (ba);
   
   % Стрелки с уровня 2
   \path (aa) edge node[left] {a} (aaa)
