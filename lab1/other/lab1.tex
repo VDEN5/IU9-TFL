@@ -36,12 +36,10 @@
   \node[state] (A) {$bbabb$};
   \node[state] (B) [right of=A] {$baababb$};
   \node[state] (C) [right of=B] {$bababb$};
-  \node[state] (D) [right of=C] {$babb$};
   
-  \path (A) edge node[above] {$bbabb \rightarrow abab$} (B)
+  \path (A) edge node[above] {$bba \rightarrow baaba$} (B)
         (B) edge node[above] {$ababb \rightarrow babb$} (C)
-        (C) edge node[above] {$ababb \rightarrow babb$} (D)
-        (D) edge[bend right=45, out=-45, in=-135, looseness=1.2] node[below] {$bbabb \rightarrow abab$} (A);
+        (C) edge[bend right=45, out=-45, in=-135, looseness=1.2] node[below] {$ababb \rightarrow babb$} (A);
 \end{tikzpicture}
 \end{center}
 
