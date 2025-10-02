@@ -1,0 +1,237 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usetikzlibrary{automata, positioning, arrows}
+
+\begin{document}
+
+\section*{Лабораторная 1}
+
+Исходная система переписывания строк:
+\begin{align*}
+&aaaa \rightarrow a \\
+&aaab \rightarrow b \\
+&bbba \rightarrow ba \\
+&bbbb \rightarrow bb \\
+&ababb \rightarrow babb \\
+&bba \rightarrow baaba \\
+&bbb \rightarrow baabb \\
+&bbaaa \rightarrow baab \\
+&bbaab \rightarrow baa \\
+&bbabb \rightarrow abab \\
+&baba \rightarrow baa \\
+&babbaa \rightarrow babba \\
+&babbab \rightarrow abb
+\end{align*}
+
+\subsection*{Завершимость}
+
+Рассмотрим слово $bbabb$:
+\begin{center}
+\begin{tikzpicture}[->, >=stealth', shorten >=1pt, auto, node distance=3.5cm, semithick]
+  \node[state] (A) {$bbabb$};
+  \node[state] (B) [right of=A] {$baababb$};
+  \node[state] (C) [right of=B] {$bababb$};
+  \node[state] (D) [right of=C] {$babb$};
+  
+  \path (A) edge node[above] {$bbabb \rightarrow abab$} (B)
+        (B) edge node[above] {$ababb \rightarrow babb$} (C)
+        (C) edge node[above] {$ababb \rightarrow babb$} (D)
+        (D) edge[bend right=45, out=-45, in=-135, looseness=1.2] node[below] {$bbabb \rightarrow abab$} (A);
+\end{tikzpicture}
+\end{center}
+
+Получили цикл, следовательно система незавершима. Сделаем систему завершимой, используя length-lexicographic order (сначала сравниваем по длине, если длины равны - лексикографическое сравнение). Поменяем в 2 правилах местами левую и правую части:
+
+\begin{align*}
+&baaba \rightarrow bba \\
+&baabb \rightarrow bbb
+\end{align*}
+
+Получили завершимую систему с выбранным фундированным порядком.
+
+\subsection*{Конфлюэнтность и пополняемость}
+
+Рассмотрим конфлюэнтность.
+Найдем критическую пару между правилами $aaab \rightarrow b$ и $babbaa \rightarrow babba$, к примеру. Перекрытие - $babbaaab$, критическая пара - $(babbb, babbaab)$, первый элемент уже в нормальной форме, приведем тоже к нормальной форме - $abb$, применив правила $babbaa \rightarrow babba$ и затем $babbab \rightarrow abb$. Отсюда уже делаем вывод, что исходная система не является локально конфлюэнтной. Можно к примеру показать, что есть правила ведущие к одной нормальной форме: рассмотрим правила $aaaa \rightarrow a$ и $aaaa \rightarrow a$. Их всевозможные перекрытия - это $aaaa$, $aaaaa$, $aaaaaa$, $aaaaaaa$ все они будут приведены при любой цепочки в $a$, $aa$, $aaa$, $a$ соответственно, момент с критическими парами опустим ввиду очевидности. Ускоорим долгую и рутинную работу, написав программу, которая делает то же самое, что и я руками: между правилами находит перекрытие, приводит их критической паре, затем приводим каждый элемент к нормальной форме (она ищется единственным образом у меня, что не совсем корректно, но если у меня перестанут появляться в таком случае правила я могу говорить о конфлюэнтности системы, так как все критические пары в таком случае будут сходится к одной нормальной форме). После запуска алгоритма поиска критических пар и правил, которые они порождают получаем пополненную систему:
+
+\begin{align*}
+&aaaa \rightarrow a \\
+&aaab \rightarrow b \\
+&bbba \rightarrow ba \\
+&bbbb \rightarrow bb \\
+&ababb \rightarrow babb \\
+&baaba \rightarrow bba \\
+&baabb \rightarrow bbb \\
+&bbaaa \rightarrow baab \\
+&bbaab \rightarrow baa \\
+&bbabb \rightarrow abab \\
+&baba \rightarrow baa \\
+&babbaa \rightarrow babba \\
+&babbab \rightarrow abb \\
+&babbb \rightarrow bab \\
+&babbb \rightarrow abb \\
+&babbb \rightarrow baaa \\
+&babb \rightarrow bab \\
+&bab \rightarrow abb \\
+&baaa \rightarrow bab \\
+&baab \rightarrow abb \\
+&abb \rightarrow bb \\
+&abaa \rightarrow baa \\
+&baa \rightarrow bb \\
+&bbaa \rightarrow bb \\
+&bbaa \rightarrow baa \\
+&bba \rightarrow aba \\
+&baa \rightarrow ba \\
+&bba \rightarrow baa \\
+&bbb \rightarrow bb \\
+&aba \rightarrow ba \\
+&bb \rightarrow ba
+\end{align*}
+
+В этой системе все критические пары сходятся к общей нормальной форме, поэтому она конфлюэнтна. Получаем, что исходная система была пополняемой по Кнуту-Бендиксу.
+
+\subsection*{Конечность}
+
+Из новых правил получаем автомат, состояния которого - нормальные формы системы:
+
+\begin{center}
+\begin{tikzpicture}[->, >=stealth', shorten >=1pt, auto, node distance=2cm, semithick]
+  % Уровень 0 (длина 0)
+  \node[state, initial] (eps) {$\epsilon$};
+  
+  % Уровень 1 (длина 1)
+  \node[state] (a) [above=1.2cm of eps] {a};
+  \node[state] (b) [right=1.5cm of a] {b};
+  
+  % Уровень 2 (длина 2)
+  \node[state] (aa) [above=1.2cm of a] {aa};
+  \node[state] (ab) [above=1.2cm of b] {ab};
+  \node[state] (ba) [right=1.5cm of ab] {ba};
+  
+  % Уровень 3 (длина 3)
+  \node[state] (aaa) [above=1.2cm of aa] {aaa};
+  \node[state] (aab) [above=1.2cm of ab] {aab};
+  
+  % Стрелки с уровня 0
+  \path (eps) edge node[left] {a} (a)
+        (eps) edge node[right] {b} (b);
+  
+  % Стрелки с уровня 1
+  \path (a) edge node[left] {a} (aa)
+        (a) edge node[above] {b} (ab)
+        (b) edge node[above] {a} (ab)
+        (b) edge node[right] {b} (ba);
+  
+  % Стрелки с уровня 2
+  \path (aa) edge node[left] {a} (aaa)
+        (aa) edge node[above] {b} (aab)
+        (ab) edge node[left] {a, b} (ba)
+        (ba) edge[loop right] node {a,b} (ba);
+  
+  % Стрелки с уровня 3
+  \path (aaa) edge[bend right=15] node[left] {a} (a)
+        (aaa) edge[bend left=15] node[above] {b} (b)
+        (aab) edge node[right] {a, b} (ba);
+\end{tikzpicture}
+\end{center}
+
+Получаем 8 состояний автомата и столько же нормальных форм: $\epsilon$, a, b, aa, ab, ba, aaa, aab.
+
+Ввиду конечного числа нормальных форм и предъявления автомата, система конечна.
+
+\subsection*{Нахождение минимальной эквивалентной системы}
+
+Для начала заметим, что у нас в правилах есть такие правила, что они оба ведут в какую-то одну нормальную форму, например: $bbaab \rightarrow baa$ и $baba \rightarrow baa$, но при том может случиться так, что между левыми частями нет прохода, нужно чтобы во всех левых частях было не более одной нормальной формы. Тогда нужно их аккуратно упорядочить. Рассмотрим это на примере: $a\rightarrow c$, $b\rightarrow c$, a и b находятся в одном классе, но мы не сможем пройти от одного к другому, потому сделаем так $a\rightarrow b$, $b\rightarrow c$, это никак не повлияет на классы эквивалентности в системе, но гарантирует, что из слова можно прийти к любому меньшему (согласно порядка) слову. То есть можно делать так: $bbaab \rightarrow baba$ и $baba \rightarrow baa$. Такое действие допустимо ввиду конфлюэнтности, оно сохранит все классы эквивалентности. Также где-то уйдут избыточные правила. Проделав такую процедуру получаем:
+
+\begin{align*}
+&aaaa \rightarrow a \\
+&aaab \rightarrow b \\
+&bbba \rightarrow bbaa \\
+&bbbb \rightarrow bbba \\
+&ababb \rightarrow aaabb \\
+&baaba \rightarrow ababb \\
+&baabb \rightarrow baaba \\
+&bbaaa \rightarrow babbb \\
+&bbaab \rightarrow babba \\
+&bbabb \rightarrow abab \\
+&baba \rightarrow baab \\
+&babbaa \rightarrow bbaab \\
+&babbab \rightarrow babbaa \\
+&babbb \rightarrow baabb \\
+&babb \rightarrow baba \\
+&bab \rightarrow baa \\
+&baaa \rightarrow abaa \\
+&baab \rightarrow baaa \\
+&abb \rightarrow aba \\
+&abaa \rightarrow bbb \\
+&baa \rightarrow abb \\
+&bbaa \rightarrow babb \\
+&bba \rightarrow bab \\
+&bbb \rightarrow bba \\
+&aba \rightarrow bb \\
+&bb \rightarrow ba
+\end{align*}
+
+Теперь приступим к минимизации. Будем доказывать эвристически - делать левую часть как можно меньше посредством других правил, если так вышло, что левая часть при таком способе совпала с правой, то вычеркиваем такое правило из системы. К примеру: есть правило $abb\rightarrow aba$, применяем $bb\rightarrow ba$, получаем $aba\rightarrow aba$, которое вычеркиваем из нашей системы из-за ненадобности. Или еще пример: есть правило $abaa\rightarrow bbb$, преобразуем левую часть:
+
+\begin{center}
+\begin{tikzpicture}[->, >=stealth', shorten >=1pt, auto, node distance=3.2cm, semithick]
+  \node[state] (A) {$abaa$};
+  \node[state] (B) [right of=A] {$aabb$};
+  \node[state] (C) [right of=B] {$aaba$};
+  
+  \path (A) edge node[above] {$baa \rightarrow abb$} (B)
+        (B) edge node[above] {$bb \rightarrow ba$} (C);
+\end{tikzpicture}
+\end{center}
+
+Получаем правило $aaba\rightarrow bbb$. Проделав такую процедуру, мы сократим число правил и сделаем максимально минимальной левую часть правил. Получаем:
+
+\begin{align*}
+&aaaa \rightarrow a \\
+&aaab \rightarrow b \\
+&bbaaa \rightarrow babbb \\
+&aaaba \rightarrow baba \\
+&baba \rightarrow baab \\
+&bab \rightarrow baa \\
+&baab \rightarrow baaa \\
+&aaba \rightarrow bbb \\
+&baa \rightarrow abb \\
+&bba \rightarrow bab \\
+&aba \rightarrow bb \\
+&bb \rightarrow ba
+\end{align*}
+
+Еще раз отметим, что левую часть правил невозможно сделать меньше, поэтому получившаяся система минимальна. Также заметим, что она также сохраняет те же классы эквивалентности, что и только что пополненная, потому она эквивалентна исходной.
+
+\subsection*{Фазз-тестирование}
+
+Тут нечего отметить.
+
+\subsection*{Мета-тестирование}
+
+В начале заметим, что в автомате есть состояние-ловушка $ba$, да еще и такая, что при попадании в подграф, образованный этим состоянием и его соседями, мы останемся в этом подграфе. Это говорит по факту о том, что неизменным будет наличие буквы $b$: если её нет, то она и не появится, а если есть, то и в любом редуцированном слове она останется. Того первый инвариант - наличие буквы $b$ в строке.
+
+Далее вспомним, что у нас система минимальная конфлюэнтная. А значит я могу разбить язык на непересекающиеся классы, это классы как раз по нормальной форме. Каждое состояние образует некоторое такое множество. Тогда построим для каждого такого состояния язык, сделаем это посредством введения регулярного выражения, то есть мы перейдем от автомата к регулярному выражению. Таких регулярных выражений будет 8 - по числу состояний. Тогда инвариантной характеристикой будет удовлетворение тому же регулярному выражению, что и до применение правил. Тогда по стандартным правилам преобразований мы получим 8 регулярных выражений:
+
+\begin{align*}
+&L_{\epsilon} = \epsilon \\
+&L_a = a(a^3)^* \\
+&L_{aa} = a^2(a^3)^* \\
+&L_{aaa} = a^3(a^3)^* \\
+&L_{aab} = a^2(a^3)^*b \\
+&L_{ab} = a(a^3)^*b \\
+&L_b = b|a^3(a^3)^*b \\
+&L_{ba} = (a^2(a^3)^*b|a(a^3)^*b|b|a^3(a^3)^*b)(a|b)(a|b)^*
+\end{align*}
+
+Отмечу, что эти регулярные выражения попарно не пересекаются, а их объединением является $(a|b)^*$. Эта характеристика наиболее точно проверит принадлежность слова его классу эквивалентности.
+
+Если до этого момента верно, то имеет смысл еще поискать какие-либо инварианты уже из регулярных выражений, так проще.
+
+\end{document}
