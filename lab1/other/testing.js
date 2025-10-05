@@ -74,36 +74,65 @@ function randomNormalize(str1){
 let rules1 = [
     {from: "aaaa", to: "a"},
     {from: "aaab", to: "b"},
-    {from: "bbaaa", to: "babbb"},
-    {from: "aaaba", to: "baba"},
-    {from: "baba", to: "baab"},
     {from: "bab", to: "baa"},
-    {from: "baab", to: "baaa"},
-    {from: "aaba", to: "bbb"},
     {from: "baa", to: "abb"},
-    {from: "bba", to: "bab"},
     {from: "aba", to: "bb"},
     {from: "bb", to: "ba"},
 ];
 function fuzz(str1, str2){
-    let res=false, mem=new Set()
-    function dfs(tempStr){
-        if(tempStr.length<str2.length) return
-        if (tempStr==str2 || res){
-            res=true
+    let normStr1, way=[], err=false
+
+    function normalize(tempStr, withWay=false) {
+        let found = false
+        if (withWay && tempStr==normStr1){
             return
         }
-        if(mem.has(tempStr))return
-        mem.add(tempStr)
-        for (let rule of rules1){
-            let poses=findAllSubstringPositions(tempStr, rule.from)
-            for (let pos of poses){
-                dfs(tempStr.substring(0, pos) + rule.to + tempStr.substring(pos + rule.from.length))
+        for (let i=0;i<rules1.length; i++) {
+            let rule=rules1[i]
+            let pos = tempStr.indexOf(rule.from);
+            if (pos !== -1) {
+                // Применяем правило и рекурсивно продолжаем
+                let newStr = tempStr.substring(0, pos) + rule.to + tempStr.substring(pos + rule.from.length);
+                if (withWay) way.push(i)
+                normalize(newStr, withWay);
+                found = true;
+                break; // Прерываем после первого найденного правила
             }
         }
+        if (!found && withWay && tempStr!=normStr1){
+            err=true
+            return
+        }
+        
+        // Если не нашли подходящих правил, сохраняем результат
+        if (!found && !withWay) {
+            normStr1 = tempStr;
+        }
     }
-    dfs(str1)
-    return res
+
+    // Использование:
+    normalize(str1);
+    normalize(str2, true)
+    if (err) return false
+    if (way.length==0) return true
+    way.reverse()
+        let res=false, mem=new Set()
+        function dfs(tempStr, index_way){
+            if(index_way==way.length) return
+            if (tempStr==str2 || res){
+                res=true
+                return
+            }
+            if(mem.has(tempStr))return
+            mem.add(tempStr)
+            let rule=way[index_way]
+                let poses=findAllSubstringPositions(tempStr, rule.to)
+                for (let pos of poses){
+                    dfs(tempStr.substring(0, pos) + rule.from + tempStr.substring(pos + rule.to.length), index_way+1)
+                }
+        }
+        dfs(str2,0)
+        return res
 }
 
 function firstCompare(str1, str2){
@@ -129,6 +158,36 @@ function secondCompare(str1, str2){
         }
     }
     return Regex[gramInd].test(str2)
+}
+
+function thirdCompare(str1, str2){
+    function classifyWord(str) {
+        if (str === '') {
+            return 'L_ε';
+        }        
+        const firstBIndex = str.indexOf('b');
+        if (firstBIndex === -1) {
+            const lengthMod3 = str.length % 3;
+            switch (lengthMod3) {
+                case 1: return 'L_a';
+                case 2: return 'L_aa';
+                case 0: return 'L_aaa';
+            }
+        }        
+        if (firstBIndex < str.length - 1) {
+            return 'L_ba';
+        }
+        
+        const aCountBeforeB = firstBIndex;
+        const aCountMod3 = aCountBeforeB % 3;
+        
+        switch (aCountMod3) {
+            case 0: return 'L_b';
+            case 1: return 'L_ab';
+            case 2: return 'L_aab';
+        }
+    }
+    return classifyWord(str1)==classifyWord(str2)
 }
 
 function randomReduce1(str, count) {
@@ -167,13 +226,13 @@ function randomNormalize1(str1){
 
 function meta(str1){
     let str=randomNormalize1(str1)
-    return firstCompare(str1, str) && secondCompare(str1, str)
+    return firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str)
 }
 function testing(){
     for (let i=0;i<100; i++){
-        let testString = generateRandomString(20);
+        let testString = generateRandomString(25);
         let reducedString = randomNormalize(testString);
-        if (i%10==0) console.log(i)
+        if (i%100==0) console.log(i)
         if (!((fuzz(testString, reducedString) || (fuzz(reducedString, testString))) && meta(testString))){
             if (testString.length>reducedString.length || (testString.length==reducedString.length && testString>reducedString)){
                 console.log(testString, reducedString)      

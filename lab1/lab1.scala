@@ -1,13 +1,15 @@
-import scala.annotation.tailrec
 import scala.util.Random
+import scala.annotation.tailrec
 
-object StringRewritingSystem {
+object StringReduction {
   private val random = new Random()
-
-  //просто рандомная строка из а и б, тут в правилах не нашем ничего такого, чтоб увелить вероятность выпадания определенной подстроки
+  
   def generateRandomString(n: Int): String = {
     val characters = "ab"
-    (1 to n).map(_ => characters(random.nextInt(characters.length))).mkString
+    (0 until n).map { _ =>
+      val randomIndex = random.nextInt(characters.length)
+      characters.charAt(randomIndex)
+    }.mkString
   }
   
   def findAllSubstringPositions(str: String, substring: String): List[Int] = {
@@ -40,67 +42,103 @@ object StringRewritingSystem {
   
   def randomReduce(str: String, count: Int): (String, Boolean) = {
     val arr = rules.flatMap { rule =>
-      findAllSubstringPositions(str, rule.from).map { pos =>
-        (pos, rule)
-      }
+      val poses = findAllSubstringPositions(str, rule.from)
+      poses.map(pos => (pos, rule))
     }
     
     if (arr.isEmpty || count == 6) (str, true)
     else {
-      val (pos, rule) = arr(random.nextInt(arr.length))
-      (str.substring(0, pos) + rule.to + str.substring(pos + rule.from.length), false)
+      val randomIndex = random.nextInt(arr.length)
+      val (pos, rule) = arr(randomIndex)
+      val newStr = str.substring(0, pos) + rule.to + str.substring(pos + rule.from.length)
+      (newStr, false)
     }
   }
   
-  def randomNormalize(str: String): String = {
+  def randomNormalize(str1: String): String = {
     @tailrec
-    def normalizeHelper(currentStr: String, count: Int): String = {
-      val (newStr, isDone) = randomReduce(currentStr, count)
-      if (isDone) newStr
-      else normalizeHelper(newStr, count + 1)
+    def normalizeLoop(currentStr: String, countRules: Int): String = {
+      val (newStr, res) = randomReduce(currentStr, countRules)
+      if (res) newStr
+      else normalizeLoop(newStr, countRules + 1)
     }
-    normalizeHelper(str, 0)
+    normalizeLoop(str1, 0)
   }
   
   val rules1: List[Rule] = List(
     Rule("aaaa", "a"),
     Rule("aaab", "b"),
-    Rule("bbaaa", "babbb"),
-    Rule("aaaba", "baba"),
-    Rule("baba", "baab"),
     Rule("bab", "baa"),
-    Rule("baab", "baaa"),
-    Rule("aaba", "bbb"),
     Rule("baa", "abb"),
-    Rule("bba", "bab"),
     Rule("aba", "bb"),
     Rule("bb", "ba")
   )
   
   def fuzz(str1: String, str2: String): Boolean = {
-    var result = false
-    val mem = scala.collection.mutable.Set[String]()
+    var normStr1: String = ""
+    var way: List[Int] = Nil
+    var err: Boolean = false
     
-    def dfs(tempStr: String): Unit = {
-      if (tempStr.length < str2.length || result) return
-      if (tempStr == str2 || result) {
-        result = true
+    def normalize(tempStr: String, withWay: Boolean = false): Unit = {
+      var found = false
+      
+      if (withWay && tempStr == normStr1) {
+        return
+      }
+      
+      for (i <- rules1.indices if !found) {
+        val rule = rules1(i)
+        val pos = tempStr.indexOf(rule.from)
+        if (pos != -1) {
+          val newStr = tempStr.substring(0, pos) + rule.to + tempStr.substring(pos + rule.from.length)
+          if (withWay) way = i :: way
+          normalize(newStr, withWay)
+          found = true
+        }
+      }
+      
+      if (!found && withWay && tempStr != normStr1) {
+        err = true
+        return
+      }
+      
+      if (!found && !withWay) {
+        normStr1 = tempStr
+      }
+    }
+    
+    normalize(str1)
+    normalize(str2, true)
+    
+    if (err) return false
+    if (way.isEmpty) return true
+    
+    way = way.reverse
+    
+    var res = false
+    val mem = scala.collection.mutable.Set.empty[String]
+    
+    def dfs(tempStr: String, index_way: Int): Unit = {
+      if (index_way == way.length || res) return
+      if (tempStr == str2 || res) {
+        res = true
         return
       }
       if (mem.contains(tempStr)) return
       
       mem.add(tempStr)
+      val ruleIndex = way(index_way)
+      val rule = rules1(ruleIndex)
+      val poses = findAllSubstringPositions(tempStr, rule.to)
       
-      rules1.foreach { rule =>
-        findAllSubstringPositions(tempStr, rule.from).foreach { pos =>
-          val newStr = tempStr.substring(0, pos) + rule.to + tempStr.substring(pos + rule.from.length)
-          dfs(newStr)
-        }
+      for (pos <- poses) {
+        val newStr = tempStr.substring(0, pos) + rule.from + tempStr.substring(pos + rule.to.length)
+        dfs(newStr, index_way + 1)
       }
     }
     
-    dfs(str1)
-    result
+    dfs(str2, 0)
+    res
   }
   
   def firstCompare(str1: String, str2: String): Boolean = {
@@ -108,7 +146,7 @@ object StringRewritingSystem {
   }
   
   def secondCompare(str1: String, str2: String): Boolean = {
-    val regexes = List(
+    val regexList = List(
       "^$".r,                          // 1. пустое слово
       "^a(aaa)*$".r,                   // 2. a(aaa)*
       "^(b|aaa(aaa)*b)$".r,            // 3. b|aaa(aaa)*b  
@@ -119,55 +157,87 @@ object StringRewritingSystem {
       "^aa(aaa)*b$".r                  // 8. aa(aaa)*b
     )
     
-    val gramInd = regexes.indexWhere(_.findFirstIn(str1).isDefined)
-    if (gramInd >= 0) regexes(gramInd).findFirstIn(str2).isDefined
-    else false
+    val gramInd = regexList.indexWhere(_.findFirstIn(str1).isDefined)
+    if (gramInd == -1) false
+    else regexList(gramInd).findFirstIn(str2).isDefined
+  }
+  
+  def thirdCompare(str1: String, str2: String): Boolean = {
+    def classifyWord(str: String): String = {
+      if (str.isEmpty) {
+        return "L_ε"
+      }
+      
+      val firstBIndex = str.indexOf('b')
+      if (firstBIndex == -1) {
+        val lengthMod3 = str.length % 3
+        lengthMod3 match {
+          case 1 => "L_a"
+          case 2 => "L_aa" 
+          case 0 => "L_aaa"
+        }
+      } else {
+        if (firstBIndex < str.length - 1) {
+          return "L_ba"
+        }
+        
+        val aCountBeforeB = firstBIndex
+        val aCountMod3 = aCountBeforeB % 3
+        
+        aCountMod3 match {
+          case 0 => "L_b"
+          case 1 => "L_ab"
+          case 2 => "L_aab"
+        }
+      }
+    }
+    
+    classifyWord(str1) == classifyWord(str2)
   }
   
   def randomReduce1(str: String, count: Int): (String, Boolean) = {
     val arr = rules1.flatMap { rule =>
-      findAllSubstringPositions(str, rule.from).map { pos =>
-        (pos, rule)
-      }
+      val poses = findAllSubstringPositions(str, rule.from)
+      poses.map(pos => (pos, rule))
     }
     
     if (arr.isEmpty || count == 5) (str, true)
     else {
-      val (pos, rule) = arr(random.nextInt(arr.length))
-      (str.substring(0, pos) + rule.to + str.substring(pos + rule.from.length), false)
+      val randomIndex = random.nextInt(arr.length)
+      val (pos, rule) = arr(randomIndex)
+      val newStr = str.substring(0, pos) + rule.to + str.substring(pos + rule.from.length)
+      (newStr, false)
     }
   }
   
-  def randomNormalize1(str: String): String = {
+  def randomNormalize1(str1: String): String = {
     @tailrec
-    def normalizeHelper(currentStr: String, count: Int): String = {
-      val (newStr, isDone) = randomReduce1(currentStr, count)
-      if (isDone) newStr
-      else normalizeHelper(newStr, count + 1)
+    def normalizeLoop(currentStr: String, countRules: Int): String = {
+      val (newStr, res) = randomReduce1(currentStr, countRules)
+      if (res) newStr
+      else normalizeLoop(newStr, countRules + 1)
     }
-    normalizeHelper(str, 0)
+    normalizeLoop(str1, 0)
   }
   
   def meta(str1: String): Boolean = {
     val str = randomNormalize1(str1)
-    firstCompare(str1, str) && secondCompare(str1, str)
+    firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str)
   }
-
-  //советую проверять на длине 15, на 20 он будет работать тоже, но медленне (может быть даже, что и больше минуты на 100 тестах)
+  
   def testing(): Unit = {
     for (i <- 0 until 100) {
-      val testString = generateRandomString(15)
+      val testString = generateRandomString(50)
       val reducedString = randomNormalize(testString)
       
       if (i % 10 == 0) println(i)
       
       if (!((fuzz(testString, reducedString) || fuzz(reducedString, testString)) && meta(testString))) {
-      //тут мы завалились
         if (testString.length > reducedString.length || 
             (testString.length == reducedString.length && testString > reducedString)) {
-          println(s"$testString, $reducedString")
+          println(s"$testString $reducedString")
         } else {
-          println(s"$reducedString, $testString")
+          println(s"$reducedString $testString")
         }
       }
     }
