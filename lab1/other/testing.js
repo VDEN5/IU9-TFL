@@ -190,6 +190,25 @@ function thirdCompare(str1, str2){
     return classifyWord(str1)==classifyWord(str2)
 }
 
+function fourthCompare(str1, str2) {
+    function hasBaOrBb(str) {
+        return str.includes('ba') || str.includes('bb');
+    }    
+    const hasBaBb1 = hasBaOrBb(str1);
+    const hasBaBb2 = hasBaOrBb(str2);
+    if (hasBaBb1 && hasBaBb2) {
+        return true;
+    }
+    
+    if (!hasBaBb1 && !hasBaBb2) {
+        const countA1 = (str1.match(/a/g) || []).length;
+        const countA2 = (str2.match(/a/g) || []).length;
+        
+        return (countA1 % 3) === (countA2 % 3);
+    }
+    return false;
+}
+
 function randomReduce1(str, count) {
     let arr = [];
     
@@ -226,11 +245,11 @@ function randomNormalize1(str1){
 
 function meta(str1){
     let str=randomNormalize1(str1)
-    return firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str)
+    return firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str) && fourthCompare(str1, str)
 }
 function testing(){
-    for (let i=0;i<100; i++){
-        let testString = generateRandomString(25);
+    for (let i=0;i<1000; i++){
+        let testString = generateRandomString(50);
         let reducedString = randomNormalize(testString);
         if (i%100==0) console.log(i)
         if (!((fuzz(testString, reducedString) || (fuzz(reducedString, testString))) && meta(testString))){

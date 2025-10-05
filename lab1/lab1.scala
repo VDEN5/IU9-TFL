@@ -195,6 +195,25 @@ object StringReduction {
     classifyWord(str1) == classifyWord(str2)
   }
   
+  def fourthCompare(str1: String, str2: String): Boolean = {
+    def hasBaOrBb(str: String): Boolean = {
+      str.contains("ba") || str.contains("bb")
+    }
+    
+    val hasBaBb1 = hasBaOrBb(str1)
+    val hasBaBb2 = hasBaOrBb(str2)
+    
+    if (hasBaBb1 && hasBaBb2) {
+      true
+    } else if (!hasBaBb1 && !hasBaBb2) {
+      val countA1 = str1.count(_ == 'a')
+      val countA2 = str2.count(_ == 'a')
+      (countA1 % 3) == (countA2 % 3)
+    } else {
+      false
+    }
+  }
+  
   def randomReduce1(str: String, count: Int): (String, Boolean) = {
     val arr = rules1.flatMap { rule =>
       val poses = findAllSubstringPositions(str, rule.from)
@@ -222,17 +241,18 @@ object StringReduction {
   
   def meta(str1: String): Boolean = {
     val str = randomNormalize1(str1)
-    firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str)
+    firstCompare(str1, str) && secondCompare(str1, str) && thirdCompare(str1, str) && fourthCompare(str1, str)
   }
   
   def testing(): Unit = {
-    for (i <- 0 until 100) {
-      val testString = generateRandomString(50)
+    for (i <- 0 until 1000) {
+      val testString = generateRandomString(50)  
       val reducedString = randomNormalize(testString)
       
-      if (i % 10 == 0) println(i)
+      if (i % 100 == 0) println(i) 
       
       if (!((fuzz(testString, reducedString) || fuzz(reducedString, testString)) && meta(testString))) {
+      //рухнули
         if (testString.length > reducedString.length || 
             (testString.length == reducedString.length && testString > reducedString)) {
           println(s"$testString $reducedString")
