@@ -59,32 +59,25 @@ function getRes1(word) {
 }
 
 let automat2 = [
-    {"c": [3, 20], "e": [6], "d": [12, 1]},                    // state 0
-    {"d": [2]},                                                // state 1
-    {"c": [3, 20], "e": [6], "d": [12, 1]},                    // state 2
-    {"a": [4]},                                                // state 3
-    {"c": [5]},                                                // state 4
-    {"c": [3, 20], "e": [6], "d": [12, 1]},                    // state 5
-    {"d": [9], "c": [7], "e": [10]},                           // state 6
-    {"c": [8]},                                                // state 7
-    {"e": [10], "c": [7], "d": [9]},                           // state 8
-    {"c": [3, 20], "e": [6], "d": [12, 1]},                    // state 9
-    {"e": [11]},                                               // state 10
-    {"c": [3, 20], "e": [6], "d": [12, 1]},                    // state 11
-    {"c": [13]},                                               // state 12
-    {"d": [14]},                                               // state 13
-    {"c": [16, 14]},                                           // state 14
-    {},                                                        // state 15 (не используется)
-    {"c": [3, 20], "e": [6, 18], "d": [12, 1, 19]},            // state 16
-    {},                                                        // state 17 (не используется)
-    {"c": [3, 20], "e": [6, 18], "d": [12, 1]},                // state 18
-    {"c": [3, 20], "e": [6], "d": [12, 1, 19]},                // state 19
-    {"a": [21], "c": [21], "e": [21], "d": [21]},              // state 20
-    {}                                                         // state 21 (final)
+    {}, // state 0 (не используется)
+    {"d": [2], "e": [8], "c": [11, 13]},                    // state 1
+    {"c": [3], "d": [1]},                                   // state 2
+    {"d": [4]},                                             // state 3
+    {"c": [5]},                                             // state 4
+    {"c": [5], "d": [1, 6], "e": [1, 7]},                  // state 5
+    {"d": [1, 6]},                                          // state 6
+    {"e": [1, 7]},                                          // state 7
+    {"d": [1], "c": [9], "e": [10]},                       // state 8
+    {"c": [8]},                                             // state 9
+    {"e": [1]},                                             // state 10
+    {"a": [12]},                                            // state 11
+    {"c": [1]},                                             // state 12
+    {"a": [14], "c": [14], "d": [14], "e": [14]},          // state 13
+    {}                                                      // state 14 (final)
 ];
 
 // Финальное состояние
-const finalState = 21;
+const finalState = 14;
 
 function getRes2(word) {
     let res = false;
@@ -106,62 +99,70 @@ function getRes2(word) {
         }
     }
     
-    processWord(word, 0);
+    processWord(word, 1);
     return res;
 }
 
 let automat3 = {
-    0: {'a': [1, 15], 'c': [1, 15], 'd': [1, 15], 'e': [1, 15],},
-    1: {'d': [2,13], 'e': [8, 13], 'c': [11,13], 'a': [13]},
-    2: {'c': [3], 'd': [1]},
-    3: {'d': [4]},
-    4: {'c': [5]},
-    5: {'c': [5], 'd': [1, 6], 'e': [1, 7]},
-    6: {'d': [1, 6]},
-    7: {'e': [1, 7]},
-    8: {'d': [1], 'c': [9], 'e': [10]},
-    9: {'c': [8]},
-    10: {'e': [1]},
-    11: {'a': [12]},
-    12: {'c': [1]},
-    13: {'a': [14], 'c': [14], 'd': [14], 'e': [14]},
-    14: {}, // финальное состояние
-    15: {'a': [15], 'e': [15], 'c': [15, 16], 'd': [15]},
-    16: {'a': [17], 'c': [17], 'd': [17], 'e': [17]},
-    17: {}  // финальное состояние
+    0: {'ε': [1, 20]}, // начальное состояние с эпсилон-переходами
+    
+    1: {'a': [8], 'c': [10], 'd': [5], 'e': [6]},    // бывшее 0
+    2: {'a': [8], 'c': [8], 'd': [7], 'e': [8]},     // бывшее 1
+    3: {'a': [8], 'c': [6], 'd': [8], 'e': [8]},     // бывшее 2
+    4: {'a': [8], 'c': [8], 'd': [8], 'e': [1]},     // бывшее 3
+    5: {'a': [8], 'c': [2], 'd': [1], 'e': [8]},     // бывшее 4
+    6: {'a': [8], 'c': [3], 'd': [1], 'e': [4]},     // бывшее 5
+    7: {'a': [9], 'c': [9], 'd': [9], 'e': [9]},     // бывшее 6
+    8: {'a': [8], 'c': [8], 'd': [8], 'e': [8]},     // бывшее 7 (ловушка)
+    9: {'a': [9], 'c': [11], 'd': [9], 'e': [9]},    // бывшее 8
+    10: {'a': [13], 'c': [12], 'd': [12], 'e': [12]},// бывшее 9
+    11: {'a': [14], 'c': [15], 'd': [14], 'e': [14]},// бывшее 10
+    12: {'a': [8], 'c': [8], 'd': [8], 'e': [8]},    // бывшее 11 (final)
+    13: {'a': [8], 'c': [1], 'd': [8], 'e': [8]},    // бывшее 12 (final)
+    14: {'a': [9], 'c': [11], 'd': [9], 'e': [9]},   // бывшее 13 (final)
+    15: {'a': [14], 'c': [15], 'd': [14], 'e': [14]},// бывшее 14 (final)
+    
+    // Второй автомат
+    16: {'a': [16], 'c': [16], 'd': [17], 'e': [16]}, // бывшее 19
+    17: {'a': [16], 'c': [18], 'd': [17], 'e': [16]}, // бывшее 20
+    18: {'a': [16], 'c': [16], 'd': [19], 'e': [16]}, // бывшее 21
+    19: {'a': [8], 'c': [20], 'd': [8], 'e': [8]},    // бывшее 22
+    20: {'a': [16], 'c': [20], 'd': [21], 'e': [22]}, // бывшее 23
+    21: {'a': [8], 'c': [18], 'd': [21], 'e': [16]}, // бывшее 24
+    22: {'a': [8], 'c': [16], 'd': [17], 'e': [22]}  // бывшее 25
 };
 
-// Финальное состояние
+// Финальные состояния для третьего автомата (объединение финальных состояний обоих автоматов)
+const finalStates3 = new Set([12, 13, 14, 15, 16, 17, 18,  19, 20, 21, 22]);
 
 function getRes3(word) {    
     function processWord(word1, currentState) {
-        if ((word1 === "" && (currentState === 14 || currentState === 17))) {
-            return true;
+        if (currentState === 0) { // начальное состояние
+            let nextStates = automat3[currentState]['ε'];
+            let result = true;
+            for (let state of nextStates) {
+                result = result && processWord(word1, state);
+            }
+            return result;
         }
-        if (word1 === "") return false;
+        
+        if (word1 === "") {
+            return finalStates3.has(currentState);
+        }
         
         let symbol = word1[0];
         let nextStates = automat3[currentState][symbol];
 
         if (!nextStates || nextStates.length === 0) return false;
 
-        if (currentState===0){//alternative state
-            for (let t of nextStates) {
-                if (!processWord(word1, t)) {
-                    return false
-                }
-            }
-            return true
+        let result = false;
+        for (let nextState of nextStates) {
+            result = result || processWord(word1.substring(1), nextState);
         }
-        let r=false
-
-        for (let t of nextStates) {
-            r=r||processWord(word1.substring(1), t);
-        }
-        return r
+        return result;
     }
     
-    return processWord(word, 0);;
+    return processWord(word, 0);
 }
 
 function getRes(word){
