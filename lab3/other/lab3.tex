@@ -1,0 +1,149 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{caption}
+
+\begin{document}
+
+\section*{Детерминизм}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{1.png} 
+    \caption{Стековый автомат}
+    \label{fig:stack_automaton}
+\end{figure}
+
+\textbf{Накачка:}
+
+\centerline{$b^{2n}aaab^{2n-1}$}
+\vspace{0.3cm}
+\centerline{$\swarrow$\hspace{2cm}$\searrow$}
+\centerline{$b$\hspace{2.5cm}$bbaaab^{4n}$}
+
+\medskip
+
+\textbf{Пояснение:}
+\begin{itemize}
+\item Из рисунка видно, что только лишь в 13 состоянии имеется недетерминизм, докажем его.
+    \item Если качать левое слово синхронно, то очевидно выпадем, так как стек не кончится.
+    \item Если префикс качаем только, то нулевая накачка его выведет правое слово из языка, так как опять стек не кончится.
+\end{itemize}
+
+% Здесь будут дополненные главы
+
+\section*{Беспрефиксность и LL-свойство}
+
+Рассмотрим слово $w = bbaaabb$, которое лежит в языке. \\
+Добавим к нему $v = abb$, получим $wv = bbaaabbabb$, которое также принадлежит языку.
+
+Следовательно, язык \textbf{не обладает префиксным свойством}, так как существует слово $w$, являющееся префиксом другого слова $wv$ из языка, при этом само $w$ также принадлежит языку.
+
+Также в предыдущем пункте было показано, что язык \textbf{недетерминирован}. \\
+Поскольку LL-свойство требует детерминированности, делаем вывод: \\
+\textbf{Язык не обладает LL-свойством}.
+\section*{Построение аппроксимаций}
+
+В начале заметим, что правило, по которому $bb$ и $aaa$ были получены из любого слова, определяется однозначно. То есть их можно получить строго по их правилу, нельзя получить их иначе (например, конкатенацией слов). Поэтому можно заменить их на $c$ и $d$ соответственно, чтобы упростить работу с автоматом (думается мне, так можно делать), затем в правилах вернём всё на место.
+
+% Место для рисунка 1: позиционный автомат
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{2.png}
+    \caption{Позиционный автомат}
+    \label{fig:positional_automaton}
+\end{figure}
+
+Получаем такой LR(0)-автомат. Преобразовав, получаем его эквивалент:
+
+% Место для рисунка 2: преобразованный позиционный автомат
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{3.png} 
+    \caption{Преобразованный позиционный автомат}
+    \label{fig:transformed_positional_automaton}
+\end{figure}
+
+С которого уже находим правила через пересечения.
+
+\subsection*{Правила из LR(0)-аппроксимации}
+
+\begin{align*}
+&\langle 0, T, 3 \rangle \rightarrow \langle 0, T, 3 \rangle a \langle 1, T, 3 \rangle \\
+&\langle 1, T, 3 \rangle \rightarrow \langle 1, T, 3 \rangle a \langle 1, T, 3 \rangle \\
+&\langle 3, T, 3 \rangle \rightarrow \langle 3, T, 3 \rangle a \langle 1, T, 3 \rangle \\
+&\langle 5, T, 6 \rangle \rightarrow \langle 5, T, 6 \rangle a \langle 4, T, 6 \rangle \\
+&\langle 4, T, 6 \rangle \rightarrow \langle 4, T, 6 \rangle a \langle 4, T, 6 \rangle \\
+&\langle 6, T, 6 \rangle \rightarrow \langle 6, T, 6 \rangle a \langle 4, T, 6 \rangle \\
+&\langle 0, T, 3 \rangle \rightarrow bb \\
+&\langle 1, T, 3 \rangle \rightarrow bb \\
+&\langle 3, T, 3 \rangle \rightarrow bb \\
+&\langle 5, T, 6 \rangle \rightarrow bb \\
+&\langle 4, T, 6 \rangle \rightarrow bb \\
+&\langle 6, T, 6 \rangle \rightarrow bb \\
+&\langle 0, S, 6 \rangle \rightarrow \langle 0, T, 3 \rangle \langle 3, S, 5 \rangle \langle 5, T, 6 \rangle \\
+&\langle 0, S, 6 \rangle \rightarrow \langle 0, T, 3 \rangle \langle 3, S, 6 \rangle \langle 6, T, 6 \rangle \\
+&\langle 3, S, 6 \rangle \rightarrow \langle 3, T, 3 \rangle \langle 3, S, 5 \rangle \langle 5, T, 6 \rangle \\
+&\langle 3, S, 6 \rangle \rightarrow \langle 3, T, 3 \rangle \langle 3, S, 6 \rangle \langle 6, T, 6 \rangle \\
+&\langle 0, S, 5 \rangle \rightarrow \langle 0, S, 5 \rangle b \langle 0, S, 5 \rangle \\
+&\langle 0, S, 5 \rangle \rightarrow \langle 0, S, 6 \rangle b \langle 0, S, 5 \rangle \\
+&\langle 0, S, 6 \rangle \rightarrow \langle 0, S, 5 \rangle b \langle 0, S, 6 \rangle \\
+&\langle 0, S, 6 \rangle \rightarrow \langle 0, S, 6 \rangle b \langle 0, S, 6 \rangle \\
+&\langle 3, S, 5 \rangle \rightarrow \langle 3, S, 5 \rangle b \langle 0, S, 5 \rangle \\
+&\langle 3, S, 5 \rangle \rightarrow \langle 3, S, 6 \rangle b \langle 0, S, 5 \rangle \\
+&\langle 3, S, 6 \rangle \rightarrow \langle 3, S, 5 \rangle b \langle 0, S, 6 \rangle \\
+&\langle 3, S, 6 \rangle \rightarrow \langle 3, S, 6 \rangle b \langle 0, S, 6 \rangle \\
+&\langle 0, S, 5 \rangle \rightarrow aaa \\
+&\langle 3, S, 5 \rangle \rightarrow aaa
+\end{align*}
+
+% Место для рисунка 3: LL(1) автомат
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{4.png} 
+    \caption{LL(1)-автомат}
+    \label{fig:LL1_automaton}
+\end{figure}
+
+LL(1)-автомат тоже приведён на рисунке. Список получившихся с него правил:
+
+\subsection*{Правила из LL(1)-аппроксимации}
+
+\begin{align*}
+&\langle 0, T, 1 \rangle \rightarrow \langle 0, T, 1 \rangle a \langle 4, T, 1 \rangle \\
+&\langle 4, T, 1 \rangle \rightarrow \langle 4, T, 1 \rangle a \langle 4, T, 1 \rangle \\
+&\langle 2, T, 1 \rangle \rightarrow \langle 2, T, 1 \rangle a \langle 4, T, 1 \rangle \\
+&\langle 3, T, 1 \rangle \rightarrow \langle 3, T, 1 \rangle a \langle 4, T, 1 \rangle \\
+&\langle 0, T, 1 \rangle \rightarrow bb \\
+&\langle 4, T, 1 \rangle \rightarrow bb \\
+&\langle 2, T, 1 \rangle \rightarrow bb \\
+&\langle 3, T, 1 \rangle \rightarrow bb \\
+&\langle 0, S, 1 \rangle \rightarrow \langle 0, T, 1 \rangle \langle 1, S, 3 \rangle \langle 3, T, 1 \rangle \\
+&\langle 0, S, 1 \rangle \rightarrow \langle 0, T, 1 \rangle \langle 1, S, 2 \rangle \langle 2, T, 1 \rangle \\
+&\langle 3, S, 1 \rangle \rightarrow \langle 3, T, 1 \rangle \langle 1, S, 3 \rangle \langle 3, T, 1 \rangle \\
+&\langle 3, S, 1 \rangle \rightarrow \langle 3, T, 1 \rangle \langle 1, S, 2 \rangle \langle 2, T, 1 \rangle \\
+&\langle 0, S, 1 \rangle \rightarrow \langle 0, S, 2 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 0, S, 1 \rangle \rightarrow \langle 0, S, 1 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 0, S, 2 \rangle \rightarrow \langle 0, S, 2 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 0, S, 2 \rangle \rightarrow \langle 0, S, 1 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 3, S, 1 \rangle \rightarrow \langle 3, S, 2 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 3, S, 1 \rangle \rightarrow \langle 3, S, 1 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 3, S, 2 \rangle \rightarrow \langle 3, S, 2 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 3, S, 2 \rangle \rightarrow \langle 3, S, 1 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 1, S, 2 \rangle \rightarrow \langle 1, S, 2 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 1, S, 2 \rangle \rightarrow \langle 1, S, 1 \rangle b \langle 3, S, 2 \rangle \\
+&\langle 1, S, 3 \rangle \rightarrow \langle 1, S, 2 \rangle b \langle 3, S, 3 \rangle \\
+&\langle 1, S, 3 \rangle \rightarrow \langle 1, S, 1 \rangle b \langle 3, S, 3 \rangle \\
+&\langle 1, S, 1 \rangle \rightarrow \langle 1, S, 2 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 1, S, 1 \rangle \rightarrow \langle 1, S, 1 \rangle b \langle 3, S, 1 \rangle \\
+&\langle 3, S, 3 \rangle \rightarrow \langle 3, S, 2 \rangle b \langle 3, S, 3 \rangle \\
+&\langle 3, S, 3 \rangle \rightarrow \langle 3, S, 1 \rangle b \langle 3, S, 3 \rangle \\
+&\langle 0, S, 2 \rangle \rightarrow aaa \\
+&\langle 1, S, 2 \rangle \rightarrow aaa \\
+&\langle 3, S, 2 \rangle \rightarrow aaa
+\end{align*}
+
+\end{document}
